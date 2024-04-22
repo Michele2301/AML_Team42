@@ -1,3 +1,11 @@
 */data/*
 */venv
 */wandb/*
+*/wandb
+*/.git/*
+*/.git
+*/.idea/*
+*/.idea
+*/.vscode/*
+*/.vscode
+__pycache__/*
