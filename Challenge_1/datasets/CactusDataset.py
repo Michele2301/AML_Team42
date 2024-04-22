@@ -15,6 +15,7 @@ class CactusDataset(Dataset):
         self.imgPath = train
         self.transform = transform
         self.target_transform = target_transform
+        self.labels=labels
 
     def __len__(self):
         # here you just need to return a single integer number as the length of your dataset, in your
@@ -24,11 +25,17 @@ class CactusDataset(Dataset):
         else:
             return len(os.listdir(self.imgPath))
 
+    def filter(self, label):
+        # create a new dataset with the filtered data
+        self_copy = CactusDataset(self.imgPath, self.labels, self.transform, self.target_transform)
+        if self_copy.df is not None:
+            self_copy.df = self.df[self.df['has_cactus'] == label].reset_index(drop=True)
+        return self_copy
+
     def __getitem__(self, idx):
         # if we already have the labels we can use them to find the nth element otherwise we use the folder order. This is used for
         # example when we have only a partial number of labels compared to the number of images or when we don't have them at all
-        img_path = os.path.join(self.imgPath,
-                                self.df['id'][idx] if self.df is not None else os.listdir(self.imgPath)[idx])
+        img_path = os.path.join(self.imgPath,self.df['id'][idx] if self.df is not None else os.listdir(self.imgPath)[idx])
         image = Image.open(img_path).convert('RGB')
         if self.df is not None:
             label = self.df['has_cactus'][idx]
@@ -44,29 +51,8 @@ class CactusDataset(Dataset):
     # this function is used to get the distribution of the labels in the dataset
     def label_distribution(self):
         if self.df is not None:
-            return self.df['has_cactus'].value_counts(ascending=True).values
+            # return a series with the label distribution. It enforce the order of the labels and 0 if they are not present
+            return self.df['has_cactus'].value_counts().reindex([0, 1], fill_value=0)
         else:
             return np.array([0, 0])
 
-
-class ConcatTransformDataset(Dataset):
-    def __init__(self, datasets, transforms=None):
-        self.datasets = datasets
-        self.transforms = transforms
-
-    def __getitem__(self, index):
-        dataset_idx, sample_idx = self._get_dataset_index(index)
-        image, label = self.datasets[dataset_idx][sample_idx]
-        if self.transforms:
-            image = self.transforms(image)
-        return image, label
-
-    def __len__(self):
-        return sum(len(dataset) for dataset in self.datasets)
-
-    def _get_dataset_index(self, index):
-        for i, dataset in enumerate(self.datasets):
-            if index < len(dataset):
-                return i, index
-            index -= len(dataset)
-        raise IndexError('Index out of range')
