@@ -3,6 +3,7 @@ from torchvision.models import resnet34, ResNet34_Weights
 import torch
 import os
 
+
 class CactusModel(torch.nn.Module):
     def __init__(self):
         super(CactusModel, self).__init__()
@@ -43,36 +44,35 @@ class CactusModel(torch.nn.Module):
             for param in self.resnet.parameters():
                 param.requires_grad = True
         optimizer = torch.optim.Adam(self.parameters(), lr=lr)
-        train_losses=[]
-        val_losses=[]
+        lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
+        train_losses = []
+        val_losses = []
         print("Training on: " + str(device))
         for epoch in range(epochs):
             # Training Phase with gpu
             self.train()
-            for i,batch in enumerate(train_dataloader):
-                images, labels = batch
+            for i, batch in enumerate(train_dataloader):
+                _, images, labels = batch
                 optimizer.zero_grad()
                 images, labels = images.to(device), labels.to(device)
                 loss_train = self.training_step((images, labels))
                 loss_train.backward()
                 optimizer.step()
                 train_losses.append(loss_train.item())
-                print("Epoch: " + str(epoch) + " Batch: " + str(i) + " Loss train: " + str(loss_train.item()))
-                if wandb:
-                    wandb.log({"loss train": loss_train.item(), "epoch": epoch, "batch": i})
-
             # Validation phase with gpu
+            lr_scheduler.step()
             self.eval()
             for batch in val_dataloader:
-                images, labels = batch
+                _, images, labels = batch
                 images, labels = images.to(device), labels.to(device)
                 loss_val = self.validation_step((images, labels))
                 val_losses.append(loss_val.item())
             print("Epoch: " + str(epoch) + " Loss train: " + str(np.average(train_losses)))
             print("Epoch: " + str(epoch) + " Loss val: " + str(np.average(val_losses)))
             if wandb:
-                wandb.log({"loss train average": str(np.average(train_losses)), "epoch": epoch, "loss val average": str(np.average(val_losses))})
-            if epoch+1 % 5 == 0:
+                wandb.log({"loss train average": np.average(train_losses), "epoch": epoch,
+                           "loss val average": np.average(val_losses)})
+            if epoch + 1 % 5 == 0:
                 torch.save(self.state_dict(), "./weights/cactus_model.pth")
         torch.save(self.state_dict(), "./weights/cactus_model.pth")
 
@@ -81,13 +81,17 @@ class CactusModel(torch.nn.Module):
         outputs = []
         with torch.no_grad():  # No need to compute gradients during inference
             for batch in images:
-                image, _ = batch
+                img_name, image, _ = batch
                 image = image.to(device)
                 out = self.resnet(image)
-                out = torch.nn.functional.softmax(out, dim=1)
-                outputs.append(torch.max(out,dim=1))
-        outputs = torch.cat(outputs, dim=0)
+                outputs.append((img_name,torch.nn.functional.softmax(out, dim=1)))
+            # from Nx(32x1) to a list of tuples (img_name, prediction)
+            final_outputs=[]
+            for output in outputs:
+                # tuple of tensors
+                img_names, predictions = output
+                for img_name, prediction in zip(img_names, predictions):
+                    final_outputs.append((img_name, torch.argmax(prediction).item()))
         if path:
             torch.save(str(outputs), path)  # Optionally save the predictions
-        return outputs
-
+        return final_outputs
