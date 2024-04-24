@@ -28,3 +28,6 @@ class CactusDataset(Dataset):
             image = self.transform(image)
 
         return image, label
+    
+    def get_image_id(self, idx):
+        return self.df.id[idx]
