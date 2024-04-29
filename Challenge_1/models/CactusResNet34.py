@@ -7,17 +7,15 @@ import os
 class CactusModel(torch.nn.Module):
     def __init__(self):
         super(CactusModel, self).__init__()
-        if os.path.exists("./weights/resnet50_weights.pth"):
-            self.resnet = resnet34(pretrained=False)
-            self.resnet.load_state_dict(torch.load("./weights/resnet50_weights.pth"))
-        else:
-            self.resnet = resnet34(weights=ResNet34_Weights.DEFAULT)
+        self.resnet = resnet34(weights=ResNet34_Weights.DEFAULT)
         self.resnet.fc = torch.nn.Sequential(
             torch.nn.Linear(in_features=self.resnet.fc.in_features, out_features=256, bias=True),
             torch.nn.ReLU(),
             torch.nn.Dropout(p=0.5),  # Add dropout with dropout rate of 0.5
-            torch.nn.Linear(in_features=256, out_features=2, bias=True),
+            torch.nn.Linear(in_features=256, out_features=1, bias=True),
         )
+        if os.path.exists("./weights/cactus_model.pth"):
+            self.load_state_dict(torch.load("./weights/cactus_model.pth"))
 
     def forward(self, x):
         return self.resnet(x)
@@ -25,13 +23,13 @@ class CactusModel(torch.nn.Module):
     def training_step(self, batch):
         images, labels = batch
         out = self.resnet(images)
-        loss = torch.nn.functional.cross_entropy(input=out, target=labels)
+        loss = torch.nn.BCEWithLogitsLoss()(out, labels.unsqueeze(1).float())
         return loss
 
     def validation_step(self, batch):
         images, labels = batch
         out = self.resnet(images)
-        loss = torch.nn.functional.cross_entropy(input=out, target=labels)
+        loss = torch.nn.BCEWithLogitsLoss()(out, labels.unsqueeze(1).float())
         return loss
 
     def train_model(self, train_dataloader, val_dataloader, epochs=10, lr=0.001, device=None, wandb=None, freeze=False):
@@ -84,14 +82,16 @@ class CactusModel(torch.nn.Module):
                 img_name, image, _ = batch
                 image = image.to(device)
                 out = self.resnet(image)
-                outputs.append((img_name,torch.nn.functional.softmax(out, dim=1)))
+                out = torch.sigmoid(out)
+                out = torch.round(out)
+                outputs.append((img_name, out))
             # from Nx(32x1) to a list of tuples (img_name, prediction)
             final_outputs=[]
             for output in outputs:
                 # tuple of tensors
                 img_names, predictions = output
                 for img_name, prediction in zip(img_names, predictions):
-                    final_outputs.append((img_name, torch.argmax(prediction).item(), torch.max(prediction).item()))
+                    final_outputs.append((img_name, prediction.item()))
         if path:
             torch.save(str(outputs), path)  # Optionally save the predictions
         return final_outputs

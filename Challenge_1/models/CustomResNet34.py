@@ -2,6 +2,7 @@ import torch
 import os
 
 
+
 class BasicBlock(torch.nn.Module):
     def __init__(self, size_in, size_out, kernel_size, stride, padding):
         super().__init__()
@@ -74,9 +75,9 @@ class CustomResNet34(torch.nn.Module):
         # goes from batch_size,512,28,28 to batch_size,512,1,1
         self.avgpool = torch.nn.AdaptiveAvgPool2d((1, 1))
         # fc layer
-        self.fc = torch.nn.Linear(512, 2)
-        # softmax
-        self.softmax = torch.nn.Softmax(dim=1)
+        self.fc = torch.nn.Linear(512, 1)
+        # sigmoid
+        self.sigmoid = torch.nn.Sigmoid()
         if os.path.exists("./weights/custom_resnet.pth"):
             self.load_state_dict(torch.load("./weights/custom_resnet.pth"))
 
@@ -109,13 +110,13 @@ class CustomResNet34(torch.nn.Module):
     def training_step(self, batch):
         images, labels = batch
         out = self(images)
-        loss = torch.nn.functional.cross_entropy(out, labels)
+        loss = torch.nn.BCEWithLogitsLoss()(out, labels.unsqueeze(1).float())
         return loss
 
     def validation_step(self, batch):
         images, labels = batch
         out = self(images)
-        loss = torch.nn.functional.cross_entropy(out, labels)
+        loss = torch.nn.BCEWithLogitsLoss()(out, labels.unsqueeze(1).float())
         return loss
 
     def train_model(self, train_dataloader, val_dataloader, epochs=10, lr=0.001, device=None, wandb=None):
@@ -163,7 +164,7 @@ class CustomResNet34(torch.nn.Module):
                 # tuple of tensors
                 img_names, predictions = output
                 for img_name, prediction in zip(img_names, predictions):
-                    final_outputs.append((img_name, torch.argmax(prediction).item()))
+                    final_outputs.append((img_name, torch.round(self.sigmoid(prediction))))
         if path:
             torch.save(str(outputs), path)  # Optionally save the predictions
         return final_outputs
