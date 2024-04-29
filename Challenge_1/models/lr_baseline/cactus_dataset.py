@@ -1,5 +1,6 @@
 import pandas as pd
 from torch.utils.data import Dataset
+from torchvision import transforms
 from PIL import Image
 import os
 
@@ -27,4 +28,14 @@ class CactusDataset(Dataset):
         if self.transform:
             image = self.transform(image)
 
-        return image, label
+        #flatten the 3 channel image into a 1d tensor
+        transform = transforms.Compose([transforms.ToTensor()])
+        tensor_image = transform(image)
+
+        #flatten the tensor into a 1d tensor
+        tensor_image = tensor_image.view(-1)
+
+        return tensor_image, label
+    
+    def get_image_id(self, idx):
+        return self.df.id[idx]

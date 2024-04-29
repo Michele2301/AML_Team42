@@ -1,5 +1,5 @@
 */data/*
-*/venv
+*/.venv
 */wandb/*
 */wandb
 */.git/*
@@ -9,5 +9,6 @@
 */.vscode/*
 */.vscode
 __pycache__/*
-*/weights/*
+weights/*
 data/
+*.DS_store
