@@ -91,7 +91,7 @@ class CactusModel(torch.nn.Module):
                 # tuple of tensors
                 img_names, predictions = output
                 for img_name, prediction in zip(img_names, predictions):
-                    final_outputs.append((img_name, torch.argmax(prediction).item()))
+                    final_outputs.append((img_name, torch.argmax(prediction).item(), torch.max(prediction).item()))
         if path:
             torch.save(str(outputs), path)  # Optionally save the predictions
         return final_outputs
