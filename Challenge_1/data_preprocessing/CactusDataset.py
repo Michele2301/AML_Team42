@@ -3,6 +3,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from PIL import Image
 import os
+import numpy as np
 
 class CactusDataset(Dataset):
     def __init__(self, csv_file, data_folder, transform=None):
@@ -26,16 +27,11 @@ class CactusDataset(Dataset):
         label = self.df.has_cactus[idx]
 
         if self.transform:
-            image = self.transform(image)
+            tensor_image = self.transform(image)
 
-        #flatten the 3 channel image into a 1d tensor
-        transform = transforms.Compose([transforms.ToTensor()])
-        tensor_image = transform(image)
+            return tensor_image, label
 
-        #flatten the tensor into a 1d tensor
-        tensor_image = tensor_image.view(-1)
-
-        return tensor_image, label
+        return image, label
     
     def get_image_id(self, idx):
         return self.df.id[idx]
