@@ -1,10 +1,12 @@
-from transformers import T5Tokenizer, T5ForConditionalGeneration
-
-
+import clip
+import torch
+import numpy as np
+import clip
 class LLM:
     def __init__(self):
-        self.tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-base")
-        self.model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-base")
+        clip_model, clip_preprocess = clip.load("ViT-B/32", device="cuda")
+        self.model = clip_model
+        self.tokenizer = clip_preprocess
 
     def generate_labels(self, training_dataset, test_dataset):
         # give some example using the training dataset
