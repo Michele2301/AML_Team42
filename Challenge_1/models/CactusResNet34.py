@@ -93,5 +93,7 @@ class CactusModel(torch.nn.Module):
                 for img_name, prediction in zip(img_names, predictions):
                     final_outputs.append((img_name, prediction.item()))
         if path:
-            torch.save(str(outputs), path)  # Optionally save the predictions
+            with open(path, "w") as f:
+                for img_name, prediction in final_outputs:
+                    f.write(img_name + "," + str(prediction) + "\n")
         return final_outputs
