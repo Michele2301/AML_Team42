@@ -8,7 +8,7 @@
 */.idea
 */.vscode/*
 */.vscode
-__pycache__/*
-*/weights/*
+*__pycache__*
+*weights/*
 data/
 *.DS_store
