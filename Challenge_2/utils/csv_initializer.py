@@ -22,7 +22,7 @@ for file in os.listdir(dir):
 
     row['filename'] = fn
 
-    if split_fn[0] == 'is_normal':
+    if split_fn[0] == 'normal':
         row['is_normal'] = 1
     else:
         row['is_normal'] = 0
