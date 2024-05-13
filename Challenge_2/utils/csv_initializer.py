@@ -2,11 +2,16 @@ import os
 import csv
 
 # Put machine_id just in case but it should be useful for now
-fields = ['filename', 'normal', 'machine_id']
+fields = ['filename', 'is_normal', 'machine_id']
 
-filename = "./data/test.csv"
+# Use this to create test set csv
+# filename = "./data/test.csv"
+# dir_path = "./data/test"
 
-dir_path = "./data/test"
+# Use this to create train set csv
+filename = "./data/train.csv"
+dir_path = "./data/train"
+
 dir = os.fsencode(dir_path)
 
 my_rows = []
@@ -17,10 +22,10 @@ for file in os.listdir(dir):
 
     row['filename'] = fn
 
-    if split_fn[0] == 'normal':
-        row['normal'] = 1
+    if split_fn[0] == 'is_normal':
+        row['is_normal'] = 1
     else:
-        row['normal'] = 0
+        row['is_normal'] = 0
     
     row['machine_id'] = split_fn[2]
 
