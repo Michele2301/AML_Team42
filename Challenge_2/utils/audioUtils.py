@@ -7,6 +7,7 @@ class AudioUtil():
     @staticmethod
     def open(audio_file):
         sig, sr = torchaudio.load(audio_file)
+        return (sig, sr)
     
     @staticmethod
     def pad_trunc(aud, max_ms):
@@ -62,7 +63,7 @@ class AudioUtil():
         
         time_mask_param = max_mask_pct * n_steps
         for _ in range(n_time_masks):
-            time_mask = transforms.TimeMasking(time_mask_param)(aug_spec, mask_value)
+            time_mask = transforms.TimeMasking(time_mask_param)
             aug_spec = time_mask(aug_spec, mask_value)
         
         return aug_spec

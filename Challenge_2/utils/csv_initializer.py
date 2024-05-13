@@ -5,12 +5,12 @@ import csv
 fields = ['filename', 'is_normal', 'machine_id']
 
 # Use this to create test set csv
-# filename = "./data/test.csv"
-# dir_path = "./data/test"
+filename = "./data/test.csv"
+dir_path = "./data/test"
 
 # Use this to create train set csv
-filename = "./data/train.csv"
-dir_path = "./data/train"
+# filename = "./data/train.csv"
+# dir_path = "./data/train"
 
 dir = os.fsencode(dir_path)
 
