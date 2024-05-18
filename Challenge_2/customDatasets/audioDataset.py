@@ -13,6 +13,8 @@ class AudioDataset(Dataset):
         self.shift_pct = 0.4
         self.min=None
         self.max=None
+        self.with_id=False
+        self.with_filename=False
 
     def __len__(self):
         return len(self.df)
@@ -20,6 +22,7 @@ class AudioDataset(Dataset):
     def __getitem__(self, idx):
         audio_file = self.data_path + self.df.loc[idx, 'filename']
         label = self.df.loc[idx, 'is_normal']
+        id = self.df.loc[idx, 'machine_id']
 
         aud = AudioUtil.open(audio_file)
         dur_aud = AudioUtil.pad_trunc(aud, self.duration)
@@ -28,4 +31,8 @@ class AudioDataset(Dataset):
         aug_sgram=aug_sgram.mT
         if self.min is not None and self.max is not None:
             aug_sgram = (aug_sgram-self.min)/(self.max-self.min)
+        if self.with_id:
+            return aug_sgram, label, id
+        if self.with_filename:
+            return aug_sgram, label, self.df.loc[idx, 'filename']
         return aug_sgram, label
