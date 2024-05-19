@@ -32,11 +32,14 @@ class AudioUtil():
     # Generate a Spectrogram
     # ----------------------------
     @staticmethod
-    def spectro_gram(aud, n_mels=128, n_fft=1000, hop_len=501):
+    def spectro_gram(aud, n_mels=128, n_fft=1000, hop_len=501, sgram_type="mel"):
         sig, sr = aud
         top_db = 80
         
-        mel = transforms.MelSpectrogram(sr, n_fft=n_fft, hop_length=hop_len, n_mels=n_mels)
+        if sgram_type == "mel":
+            mel = transforms.MelSpectrogram(sr, n_fft=n_fft, hop_length=hop_len, n_mels=n_mels)
+        elif sgram_type == "hz":
+            mel = transforms.Spectrogram(n_fft=n_fft, hop_length=hop_len)
         spec = mel(sig)
 
         ampl = transforms.AmplitudeToDB(top_db=top_db)
