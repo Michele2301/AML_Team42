@@ -33,8 +33,7 @@ class AudioDataset(Dataset):
         audio_file = self.data_path + self.df.loc[idx, 'filename']
         label = self.df.loc[idx, 'is_normal']
         id = self.df.loc[idx, 'machine_id']
-        
-        aud = None
+
         if self.in_memory:
             aud = self.audios[idx]
         else:
