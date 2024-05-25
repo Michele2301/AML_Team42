@@ -20,6 +20,8 @@ class AudioDataset(Dataset):
         self.augment = augment
         self.split_sgram = split_sgram
         self.test_mode = test_mode
+        self.mean=None
+        self.std=None
 
         # Save all audio already in memory, so that getitem does not have to read every time from disk
         if in_memory:
@@ -59,8 +61,11 @@ class AudioDataset(Dataset):
             for idx in range(10):
                 len = int(shape / 10)
                 new_aug_sgram = aug_sgram[:, len*idx:len*idx + len, :]
+                # normalize mean 0 var 1
+                if self.mean is not None and self.std is not None:
+                    new_aug_sgram = (new_aug_sgram - self.mean) / self.std
                 if self.min is not None and self.max is not None:
-                    new_aug_sgram = (new_aug_sgram-self.min)/(self.max-self.min) 
+                    new_aug_sgram = (new_aug_sgram-self.min)/(self.max-self.min)
                 aug_sgrams.append(new_aug_sgram)
             return torch.cat(aug_sgrams), label
 
@@ -68,11 +73,13 @@ class AudioDataset(Dataset):
         if self.split_sgram:
             idx = torch.randint(10, (1,)).item()
             len = int(aug_sgram.shape[1] / 10)
-            aug_sgram = aug_sgram[:, len*idx:len*idx + len, :] 
+            aug_sgram = aug_sgram[:, len*idx:len*idx + len, :]
+
+        if self.mean is not None and self.std is not None:
+            aug_sgram = (aug_sgram-self.mean)/self.std
 
         if self.min is not None and self.max is not None:
             aug_sgram = (aug_sgram-self.min)/(self.max-self.min)
-
 
         if self.with_id:
             return aug_sgram, label, id
