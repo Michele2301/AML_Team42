@@ -12,3 +12,4 @@
 *weights/*
 data/
 *.DS_store
+*/MyPyTorchModel_torchviz*
